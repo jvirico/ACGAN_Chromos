@@ -2,6 +2,7 @@ import argparse
 import os
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 import torchvision.transforms as transforms
 from torchvision.utils import save_image
@@ -30,12 +31,19 @@ parser.add_argument("--channels", type=int, default=1, help="number of image cha
 parser.add_argument("--sample_interval", type=int, default=400, help="interval between image sampling")
 opt = parser.parse_args()
 
+
+############
+## TODO:
+##
+##
+
+
 #####################################
 ## Hyperparameter customization 
 #  (overrides command line arguments, 
 #  will be removed at the end)
 #####################################
-opt.n_epochs = 100
+opt.n_epochs = 1
 opt.batch_size = 64
 # Adam Optimizer
 opt.lr = 0.0002
@@ -53,19 +61,36 @@ opt.sample_interval = 400
 dataset_url = '../../data'
 subset_url = '32'
 # Results
-res_folder = 'res_model'+str(opt.img_size)+'_ep'+ str(opt.n_epochs)+'_bs'+ str(opt.batch_size)
+results_folder = 'results/model'+str(opt.img_size)+'_ep'+ str(opt.n_epochs)+'_bs'+ str(opt.batch_size)
+
+#####################################
+## Dataset manipulation
+#####################################
+transform0 = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor(),
+    transforms.Normalize([0.5], [0.5])
+])
+
+transform1 = transforms.Compose([
+    transforms.Resize((146,31), interpolation=0),
+    transforms.Grayscale(num_output_channels=1),
+    transforms.ToTensor()
+])
+
+transform2 = transforms.Compose([
+    transforms.Grayscale(num_output_channels=1),
+    transforms.Resize(256, interpolation=0),
+    transforms.ToTensor()
+])
+## Data Transformation to apply
+transform = transform0
 #####################################
 
-os.makedirs(res_folder + "/images", exist_ok=True)
-os.makedirs(res_folder + "/plots", exist_ok=True)
 
-
+os.makedirs(results_folder + "/images", exist_ok=True)
+os.makedirs(results_folder + "/plots", exist_ok=True)
 print(opt)
-
-
-############
-## TODO:
-##   - Save losses and accuracies at opt.sample_interval and plots at the end
 
 
 class Chromosomes(Dataset):
@@ -116,31 +141,8 @@ class Chromosomes(Dataset):
 
 
 
-#####################################
-## Dataset manipulation
-#####################################
-transform0 = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor(),
-    transforms.Normalize([0.5], [0.5])
-])
-
-transform1 = transforms.Compose([
-    transforms.Resize((146,31), interpolation=0),
-    transforms.Grayscale(num_output_channels=1),
-    transforms.ToTensor()
-])
-
-transform2 = transforms.Compose([
-    transforms.Grayscale(num_output_channels=1),
-    transforms.Resize(256, interpolation=0),
-    transforms.ToTensor()
-])
-
-train_set = Chromosomes(root=dataset_url, subset=subset_url, im_transform=transform0)
+train_set = Chromosomes(root=dataset_url, subset=subset_url, im_transform=transform)
 dataloader = DataLoader(train_set, batch_size=opt.batch_size, shuffle=True)
-
-#####################################
 
 
 cuda = True if torch.cuda.is_available() else False
@@ -272,12 +274,16 @@ def sample_image(n_row, batches_done):
     labels = np.array([num for _ in range(n_row) for num in range(n_row)])
     labels = Variable(LongTensor(labels))
     gen_imgs = generator(z, labels)
-    save_image(gen_imgs.data, res_folder + "/images/%d.png" % batches_done, nrow=n_row, normalize=True)
+    save_image(gen_imgs.data, results_folder + "/images/%d.png" % batches_done, nrow=n_row, normalize=True)
 
 
 # ----------
 #  Training
 # ----------
+
+losses = []
+accuracies = []
+iteration_checkpoints = []
 
 for epoch in range(opt.n_epochs):
     for i, (imgs, labels) in enumerate(dataloader):
@@ -344,3 +350,40 @@ for epoch in range(opt.n_epochs):
         batches_done = epoch * len(dataloader) + i
         if batches_done % opt.sample_interval == 0:
             sample_image(n_row=10, batches_done=batches_done)
+        
+        # Saving losses and accuracy
+        losses.append((d_loss, g_loss))
+        accuracies.append(100.0 * d_acc)
+        iteration_checkpoints.append(epoch + 1)
+
+
+losses = np.array(losses)
+
+# Plot training losses for Discriminator and Generator
+plt.figure(figsize=(15, 5))
+plt.plot(iteration_checkpoints, losses.T[0], label="Discriminator loss")
+plt.plot(iteration_checkpoints, losses.T[1], label="Generator loss")
+
+plt.xticks(iteration_checkpoints, rotation=90)
+
+plt.title("Training Loss")
+plt.xlabel("Iteration")
+plt.ylabel("Loss")
+plt.legend()
+plt.savefig(results_folder + "/plots/Losses.png")
+
+accuracies = np.array(accuracies)
+
+# Plot Discriminator accuracy
+plt.figure(figsize=(15, 5))
+plt.plot(iteration_checkpoints, accuracies, label="Discriminator accuracy")
+
+plt.xticks(iteration_checkpoints, rotation=90)
+plt.yticks(range(0, 100, 5))
+
+plt.title("Discriminator Accuracy")
+plt.xlabel("Iteration")
+plt.ylabel("Accuracy (%)")
+plt.legend()
+plt.savefig(results_folder + "/plots/Accuracy.png")
+plt.show()
