@@ -43,7 +43,7 @@ opt = parser.parse_args()
 #  (overrides command line arguments, 
 #  will be removed at the end)
 #####################################
-opt.n_epochs = 1
+opt.n_epochs = 200
 opt.batch_size = 64
 # Adam Optimizer
 opt.lr = 0.0002
@@ -54,15 +54,16 @@ opt.n_cpu = 8
 #
 opt.latent_dim = 100
 opt.n_classes = 23
-opt.img_size = 32
+opt.img_size = 128
 opt.channels = 1
 opt.sample_interval = 400
 # Dataset
-dataset_url = '../../data'
-subset_url = '32'
+dataset_url = '../data'
+subset_url = '128'
 # Results
+save_ckp_every = 10 #epochs
 results_folder = 'results/model'+str(opt.img_size)+'_ep'+ str(opt.n_epochs)+'_bs'+ str(opt.batch_size)
-
+ckp_folder = results_folder + '/checkpoints'
 #####################################
 ## Dataset manipulation
 #####################################
@@ -87,7 +88,7 @@ transform2 = transforms.Compose([
 transform = transform0
 #####################################
 
-
+os.makedirs(ckp_folder, exist_ok=True)
 os.makedirs(results_folder + "/images", exist_ok=True)
 os.makedirs(results_folder + "/plots", exist_ok=True)
 print(opt)
@@ -317,7 +318,7 @@ for epoch in range(opt.n_epochs):
 
         g_loss.backward()
         optimizer_G.step()
-
+        
         # ---------------------
         #  Train Discriminator
         # ---------------------
@@ -355,6 +356,11 @@ for epoch in range(opt.n_epochs):
         losses.append((d_loss, g_loss))
         accuracies.append(100.0 * d_acc)
         iteration_checkpoints.append(epoch + 1)
+
+        # save models every 10 epochs
+        if (epoch + 1 ) % opt.n_epochs == 0 or ((epoch+1) < opt.n_epochs and (epoch+1) % save_ckp_every == 0):
+            torch.save(generator.state_dict(), ckp_folder+'/G_{0}.pt'.format(epoch+1))
+            torch.save(discriminator.state_dict(), ckp_folder+'/D_{0}.pt'.format(epoch+1))
 
 
 losses = np.array(losses)
