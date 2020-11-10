@@ -56,7 +56,7 @@ opt.img_size = 128
 opt.channels = 1
 opt.sample_interval = 400
 #
-ckp_name = 'G_80'
+ckp_name = 'G_110'
 generations_folder = 'generated/ckp_'+ckp_name
 generations_ckp_file = 'checkpoints/' + ckp_name + '.pt'
 ckp_folder = 'checkpoints'
@@ -115,21 +115,22 @@ FloatTensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
 LongTensor = torch.cuda.LongTensor if cuda else torch.LongTensor
 
 def sample_image(n_row, file_name, label=-1):
-    """Saves a grid of generated images ranging from 0 to n_classes"""
-    # Sample noise
-    z = Variable(FloatTensor(np.random.normal(0, 1, (23*n_row, opt.latent_dim))))
-    # Get labels ranging from 0 to n_classes for n rows
+    """Saves a grid of generated images ranging from 0 to n_classes or all same class"""
     if(label == -1):
+        # Sample noise
+        z = Variable(FloatTensor(np.random.normal(0, 1, (n_row*opt.n_classes, opt.latent_dim))))
         # All classes
-        labels = np.array([num for _ in range(n_row) for num in range(23)])
+        labels = np.array([num for _ in range(n_row) for num in range(opt.n_classes)])
     else:
-        labels = np.array([num for _ in range(n_row) for num in range(n_row)])
+        # Sample noise
+        z = Variable(FloatTensor(np.random.normal(0, 1, (n_row, opt.latent_dim))))
+        labels = np.array([label for _ in range(n_row)])
     labels = Variable(LongTensor(labels))
     gen_imgs = generator(z, labels)
     save_image(gen_imgs.data, generations_folder + "/%s.png" % file_name, nrow=n_row, normalize=True)
 
 
-sample_image(10, 'test_G_80')
+sample_image(10, 'test_'+ckp_name )
 
 
 
