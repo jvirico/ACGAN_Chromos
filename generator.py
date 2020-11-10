@@ -56,7 +56,7 @@ opt.img_size = 128
 opt.channels = 1
 opt.sample_interval = 400
 #
-ckp_name = 'G_110'
+ckp_name = 'G_200'
 generations_folder = 'generated/ckp_'+ckp_name
 generations_ckp_file = 'checkpoints/' + ckp_name + '.pt'
 ckp_folder = 'checkpoints'
