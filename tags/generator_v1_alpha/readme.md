@@ -1,6 +1,6 @@
-### Synthetic Chromosome Images Generator conditioned by chromosome type (1-23)
+# Synthetic Chromosome Images Generator conditioned by chromosome type (1-23)
 #
-# by Javier Rico (jvirico@gmail.com) and Lukas Uzolas (lukas@uzolas.com)
+### by Javier Rico (jvirico@gmail.com) and Lukas Uzolas (lukas@uzolas.com)
 #
 This is an **alpha version** for preview, not suited for production.
 
