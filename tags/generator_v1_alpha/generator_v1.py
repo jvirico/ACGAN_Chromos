@@ -18,7 +18,7 @@ import torch.nn.functional as F
 import torch
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--checkpoint", type=str, default='G_110.pt', help="Generator Checkpoint (G_110)")
+parser.add_argument("--checkpoint", type=str, default='G_200', help="Generator Checkpoint (G_110)")
 parser.add_argument("--num_generations", type=int, default=1, help="Number of images to generate")
 parser.add_argument("--label", type=int, default=1, help="Class to generate")
 opt = parser.parse_args()
