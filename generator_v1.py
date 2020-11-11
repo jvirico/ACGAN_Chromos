@@ -121,7 +121,11 @@ def sample_image(n_row, file_name, label=opt.label-1):
     save_image(gen_imgs.data, generations_folder + "/%s.png" % file_name, nrow=n_row, normalize=True)
 
 
-sample_image(opt.num_generations, 'gv1_'+ckp_name,opt.label-1)
+if(opt.num_generations == 0):
+    while True:
+        sample_image(1, 'gv1_'+ckp_name,opt.label-1)
+else:
+    sample_image(opt.num_generations, 'gv1_'+ckp_name,opt.label-1)
 
 
 
