@@ -1,3 +1,5 @@
 .vscode
 /*/images/*.png
 .DS_Store
+/*/generated/*/*.png
+*.pyc

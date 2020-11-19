@@ -24,8 +24,25 @@ opt = parser.parse_args()
 ##  1- Generation of num_generations images of each checkpoint in folder
 ##  2- Generation of num_generations images of particular checkpoint
 
-if(opt.checkpoint == 'all'):
-    # loop through checkpoints
-    print('all not implemented, yet..')
-else:
-    g.generator1(opt.checkpoint, opt.num_generations, opt.label)
+# Find if checkpoint option is a folder or file
+if(os.path.isdir(opt.checkpoint)):
+    # loop through checkpoints in folder
+    for filename in os.listdir(opt.checkpoint):
+        if filename.endswith(".pt") and filename.startswith('G'):
+
+            print('Processing checkpoint: ' + filename)
+            # generate synthetic images
+            g.generator2(opt.checkpoint + '/' + filename, opt.num_generations, opt.label, split=True)
+            
+    print('Done!')
+elif(os.path.isfile(opt.checkpoint)):
+    # single checkpoint
+
+    filename = os.path.basename(opt.checkpoint)
+
+    if opt.checkpoint.endswith(".pt") and filename.startswith('G'):
+        print('Processing checkpoint: ' + filename)
+        # generate synthetic images
+        g.generator2(opt.checkpoint, opt.num_generations, opt.label, split=True)
+    
+    print('Done!')
